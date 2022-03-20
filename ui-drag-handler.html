@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>UIDragHandler</title>
+        <link rel="stylesheet" href="./css/common.css" />
+        <style>
+            .container {
+                border: 2px solid hsl(200, 50%, 30%, 1);
+            }
+
+            ui-drag-handler {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+
+                width: 340px;
+                height: 30px;
+                padding: 0 12px;
+                background-color: hsl(200, 75%, 50%, 1);
+            }
+            
+        </style>
+        <script src="./components/UIDragHandler.js"></script>
+    </head>
+
+    <body>
+        <div class="container">
+            <ui-drag-handler target=".container">
+                UIDragHandler (ui-drag-hangler)
+                <div class="close">X</div>
+            </ui-drag-handler>
+        </div>
+    </body>
+
+    <script>
+		
+    </script>
+</html>
