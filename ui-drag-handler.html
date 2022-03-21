@@ -22,7 +22,7 @@
 				font-size: 12px;
 				color: #fff;
 			}
-			
+
 			.close {
 				position: relative;
 				display: flex;
@@ -47,20 +47,30 @@
 			.close::after {
 				transform: rotate(135deg);
 			}
+
+			.boundary {
+				position: relative;
+				width: 800px;
+				height: 600px;
+				margin: 100px auto;
+				outline: 1px solid lightgray;
+			}
 		</style>
 		<script src="./components/UIDragHandler.js"></script>
 	</head>
 
 	<body>
-		<div class="container">
-			<ui-drag-handler target=".container">
-				UIDragHandler (ui-drag-hangler)
-				<div class="close" onclick="console.log('++++++++++ close clicked');"></div>
-			</ui-drag-handler>
+		<div class="boundary">
+			<div class="container">
+				<ui-drag-handler target=".container">
+					UIDragHandler (ui-drag-hangler)
+					<div class="close" onclick="console.log('++++++++++ close clicked');"></div>
+				</ui-drag-handler>
+			</div>
 		</div>
 	</body>
 
 	<script>
-		
+
 	</script>
 </html>
