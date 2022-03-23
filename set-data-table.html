@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<title>SetDataTable</title>
+		<link rel="stylesheet" href="./css/common.css" />
+		<style>
+			.container {
+				width: 600px;
+				height: 300px;
+				padding: 12px 20px;
+				margin: 50px auto;
+				outline: 1px solid gray;
+				font-size: 10pt;
+			}
+			
+			th, td {
+				text-align: center;
+				border: thin solid gray;
+			}
+
+			#data_table {
+				width: 100%;
+			}
+		</style>
+		<script src="./components/SetDataTable.js"></script>
+	</head>
+
+	<body>
+		<div class="container">
+			<set-data-table id="data_table"></set-data-table>
+		</div>
+	</body>
+
+	<script>
+		const table = document.querySelector('#data_table');
+		const data = {
+			
+			head: [
+				{
+					into: '현시 운영 정보',
+					car_1: '차종별 회전 교통량 (대)',
+					car_0: '승용차 환산 (대)',
+					tline: '이동류군 (차선)',
+				},
+				{
+					into: '접근로',
+					turn: '방향',
+					rign: 'RING',
+					hyun: '현시 번호',
+					car_1: '승용차',
+					car_2: '버스',
+					car_3: '트럭',
+					car_0: '환산 합계',
+					tline: '총 차선 수',
+					cline: '차선 수',
+				}
+			],
+			
+			body: [
+				{
+					into: 'EB',
+					turn: '좌',
+					rign: 'A',
+					move: 5,
+					hyun: 3,
+					car_1: 164,
+					car_2: 26,
+					car_3: 13,
+					car_0: 215,
+					tline: 4,
+					cline: 1
+				},
+				{
+					into: {},
+					turn: '직',
+					rign: 'B',
+					move: 2,
+					hyun: 3,
+					car_1: 480,
+					car_2: 26,
+					car_3: 40,
+					car_0: 566,
+					tline: {},
+					cline: 3
+				},
+				{
+					into: {},
+					turn: '우',
+					rign: '',
+					move: '',
+					hyun: '',
+					car_1: 130,
+					car_2: 17,
+					car_3: 11,
+					car_0: 166,
+					tline: {},
+					cline: 3
+				},
+				{
+					into: 'WB',
+					turn: '좌',
+					rign: 'A',
+					move: 5,
+					hyun: 3,
+					car_1: 164,
+					car_2: 26,
+					car_3: 13,
+					car_0: 215,
+					tline: 4,
+					cline: 1
+				},
+				{
+					into: {},
+					turn: '직',
+					rign: 'B',
+					move: 2,
+					hyun: 3,
+					car_1: 480,
+					car_2: 26,
+					car_3: 40,
+					car_0: 566,
+					tline: {},
+					cline: 3
+				},
+				{
+					into: {},
+					turn: '우',
+					rign: '',
+					move: '',
+					hyun: '',
+					car_1: 130,
+					car_2: 17,
+					car_3: 11,
+					car_0: 166,
+					tline: {},
+					cline: 3
+				}
+			]
+		}
+
+		table.init(data);
+	</script>
+</html>
