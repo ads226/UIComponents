@@ -5,13 +5,33 @@
 		<title>UIDatePicker</title>
 		<link rel="stylesheet" href="./css/common.css" />
 		<style>
+			body {
+				background-color: lightgray;
+			}
+			.container {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 600px;
+				height: 300px;
+				padding: 12px 20px;
+				margin: 50px auto;
+				outline: 1px solid gray;
+				font-size: 11pt;
+			}
 
+			ui-date-picker {
+				width: 180px;
+				height: 28px;
+			}
 		</style>
 		<script src="./components/UIDatePicker.js"></script>
 	</head>
 
 	<body>
-		<ui-date-picker value="2022-12-31"></ui-date-picker>
+		<div class="container">
+			<ui-date-picker value="2022-12-31"></ui-date-picker>
+		</div>
 	</body>
 
 	<script>
