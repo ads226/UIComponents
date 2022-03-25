@@ -6,7 +6,9 @@
 	margin: 0;
 	box-sizing: border-box;
 	user-select: none;
+}
 
+body {
 	font-family: 'Noto Sans KR', sans-serif;
 }
 
