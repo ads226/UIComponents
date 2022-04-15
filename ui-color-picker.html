@@ -15,20 +15,25 @@
                 margin: 50px auto;
                 border: 1px solid hsl(200, 50%, 30%, 0.5);
             }
-
+            div[is=ui-color-picker],
             ui-color-picker {
                 width: 20px;
                 height: 20px;
                 border: 1px solid hsl(200, 50%, 30%, 1);
-                background-color: #38293829;
+                background-color: #D72E1898;
+                background-color: transparent;
+                background-color: hsl(180, 100%, 50%, 1);
+                background-color: rgb(241, 162, 24);
+                background-color: rgb(84, 110, 28);
             }
+
         </style>
         <script src="./components/UIColorPicker.js"></script>
     </head>
 
     <body>
         <div class="container">
-            <ui-color-picker></ui-color-picker>
+            <ui-color-picker change="console.log(this.rgb);"></ui-color-picker>
         </div>
     </body>
 </html>
