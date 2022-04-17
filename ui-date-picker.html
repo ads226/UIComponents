@@ -57,54 +57,77 @@
 				border: 1px solid;
 				border-color: hsl(0, 0%, 0%, 0.5);
 				background-color: hsl(0, 0%, 100%, 1.0);
+
+				font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 			}
 			
 			.head {
 				display: flex;
 				flex-flow: column;
 				justify-content: space-between;
-
+				padding: 12px;
 				background-color: hsl(0, 0%, 0%, 0.1);
+				font-size: 13px;
 			}
 			
 			.year_select,
-			.month_select,
-			.btn_wrap {
+			.month_select {
+				width: 120px;
+				height: 30px;
 				display: flex;
 				justify-content: space-between;
+				align-items: center;
 			}
 
 			.year_select .prev,
-			.year_select .next {
-				width: 24px;
-			}
-
+			.year_select .next,
 			.month_select .prev,
 			.month_select .next {
-				width: 18px;
+				width: 20px;
+				cursor: pointer;
 			}
 
-			.prev,
-			.next {
-				background-color: red;
+			svg {
+				width: 80%;
+				height: 80%;
+				vertical-align: middle;
 			}
-
-			.prev::after,
-			.next::after {
-				content: "";
-				display: block;
-				padding-bottom: 100%;
-			}
-
 			
 			
 			.body {
 				display: grid;
 				grid-template-columns: repeat(7, 1fr);
+				padding: 12px;
+				font-size: 13px;
 			}
 			.date_wrap,
 			.week_wrap {
 				display: contents;
+			}
+
+			.date_wrap .item {
+				width: 28px;
+				height: 28px;
+				font-size: 11px;
+				text-align: center;
+			}
+
+			.week_wrap .item {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				width: 28px;
+				height: 28px;
+				border-radius: 200px;
+			}
+
+			.week_wrap .other {
+				opacity: 0.2;
+			}
+
+			.week_wrap .select {
+				color: #fff;
+				background-color: hsl(200, 100%, 50%, 1.0);
 			}
 		</style>
 		
@@ -123,14 +146,30 @@
 					<div class="head">
 						<div class="sel_wrap">
 							<div class="year_select">
-								<div class="prev"></div>
+								<div class="prev">
+									<svg viewBox="0 0 24 24">
+										<polygon points="5,12 16,1 18,3 9,12 18,21 16,23 "/>
+									</svg>
+								</div>
 								<div class="year">2022</div>
-								<div class="next"></div>
+								<div class="next">
+									<svg viewBox="0 0 24 24">
+										<polygon points="19,12 8,1 6,3 15,12 6,21 8,23 "/>
+									</svg>
+								</div>
 							</div>
 							<div class="month_select">
-								<div class="prev"></div>
+								<div class="prev">
+									<svg viewBox="0 0 24 24">
+										<polygon points="5,12 16,1 18,3 9,12 18,21 16,23 "/>
+									</svg>
+								</div>
 								<div class="month">March</div>
-								<div class="next"></div>
+								<div class="next">
+									<svg viewBox="0 0 24 24">
+										<polygon points="19,12 8,1 6,3 15,12 6,21 8,23 "/>
+									</svg>
+								</div>
 							</div>
 						</div>
 						<div class="btn_wrap">

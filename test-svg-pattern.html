@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <style>
+            body {
+                background-color: gray;
+            }
+            
+            div#container {
+                width: 200px;
+                height: 40px;
+                outline: 1px solid;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <template>
+            
+        </template>
+        <div id="container">
+            <svg viewBox="0 0 200 200" width="200" height="200">
+                <defs>
+                    <pattern id="pattern" viewBox="0 0 20 20" height="10%" width="10%">
+                        <rect fill="#FFFFFF" width="10" height="10" x="0" y="0"/>
+                        <rect fill="#D8D8D8" width="10" height="10" x="10" y="0"/>
+                        <rect fill="#D8D8D8" width="10" height="10" x="0" y="10"/>
+                        <rect fill="#FFFFFF" width="10" height="10" x="10" y="10"/>
+                    </pattern>
+                </defs>
+            </svg>
+            
+            <svg viewBox="0 0 200 200" width="200" height="200">
+                
+
+                <rect fill="url(#pattern)" width="200" height="200" x="0" y="0"/>
+            </svg>
+
+            
+        </div>
+
+        <svg viewBox="0 0 230 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="star" viewBox="0,0,10,10" width="10%" height="10%">
+                <polygon points="0,0 2,5 0,10 5,8 10,10 8,5 10,0 5,2"/>
+              </pattern>
+            </defs>
+  
+            <circle cx="50"  cy="50" r="50" fill="url(#star)"/>
+            <circle cx="180" cy="50" r="40" fill="none" stroke-width="20" stroke="url(#star)"/>
+          </svg>
+
+    </body>
+</html>
