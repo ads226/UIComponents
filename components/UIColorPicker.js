@@ -1,11 +1,15 @@
 class UIColorPicker extends HTMLElement {
     #knob = document.createElement('div');
     #panel = document.createElement('div');
+    #type = 'hex';
+    #point
 
     #H = 0;
     #S = 0;
     #V = 0;
-    #A = 0;
+    #A = 1;
+
+    #useAlpha = false;
 
     constructor() {
         super();
@@ -115,6 +119,10 @@ class UIColorPicker extends HTMLElement {
                 );
             }
 
+            #alpha {
+                display: none;
+            }
+
             #alpha #dim {
                 background: linear-gradient(
                     to right,
@@ -125,7 +133,7 @@ class UIColorPicker extends HTMLElement {
 
             #values {
                 display: flex;
-                gap: 16px;
+                gap: 8px;
                 width: calc(100% - var(--padding) * 2);
                 height: 21px;
             }
@@ -173,6 +181,7 @@ class UIColorPicker extends HTMLElement {
             }
 
             .value_wrap {
+                position: relative;
                 flex: 1;
                 display: flex;
             }
@@ -180,10 +189,11 @@ class UIColorPicker extends HTMLElement {
             .value_wrap input {
                 width: 100%;
                 outline: none;
-                font-size: 12px;
+                font-size: 11px;
                 color: #000;
                 text-align: center;
                 border: 1px solid var(--color-line);
+                z-index: 1;
             }
 
             #btns {
@@ -261,7 +271,7 @@ class UIColorPicker extends HTMLElement {
             </div>
             <div id="values">
                 <div class="type_wrap">
-                    <input type="radio" name="type" id="type_hex" />
+                    <input type="radio" name="type" id="type_hex" checked />
                     <label for="type_hex">HEX</label>
                     <input type="radio" name="type" id="type_rgb" />
                     <label for="type_rgb">RGB</label>
@@ -269,6 +279,9 @@ class UIColorPicker extends HTMLElement {
                     <label for="type_hsl">HSL</label>
                 </div>
                 <div class="value_wrap">
+                    <div class="svg_wrap">
+                        <svg></svg>
+                    </div>
                     <input type="text" id="txt_value" value="#000000" readonly />
                 </div>
             </div>
@@ -310,6 +323,10 @@ class UIColorPicker extends HTMLElement {
         this.open = this.open.bind(this);
         this.close = this.close.bind(this);
         this.done = this.done.bind(this);
+        this.setType = this.setType.bind(this);
+        this.onPointMove = this.onPointMove.bind(this);
+        this.onPointPress = this.onPointPress.bind(this);
+        this.onPointRelease = this.onPointRelease.bind(this);
 
         const shadow = this.attachShadow({ mode: 'open' });
         shadow.append(style, this.#knob);
@@ -324,13 +341,20 @@ class UIColorPicker extends HTMLElement {
     }
 
     open(e) {
-        console.log('+++++++++++++++ open', e.target);
         const panel = this.shadowRoot.querySelector('#panel');
 
         if (!panel) {
             this.#panel.querySelector('#btn_reset').addEventListener('click', this.open);
             this.#panel.querySelector('#btn_done').addEventListener('click', this.done);
             this.#panel.querySelector('#btn_close').addEventListener('click', this.close);
+
+            this.#panel.querySelector('#palette').addEventListener('mousedown', this.onPointPress);
+            this.#panel.querySelector('#hue').addEventListener('mousedown', this.onPointPress);
+            this.#panel.querySelector('#alpha').addEventListener('mousedown', this.onPointPress);
+
+            this.#panel.querySelectorAll('.type_wrap input').forEach((input) => {
+                input.addEventListener('click', this.setType);
+            });
 
             this.shadowRoot.append(this.#panel);
             document.querySelector('html').addEventListener('mousedown', this.close);
@@ -340,7 +364,6 @@ class UIColorPicker extends HTMLElement {
     }
 
     close(e) {
-        console.log('+++++++++++++++ close', e.target);
         if (e && e.target.closest(UIColorPicker.is)) return;
 
         const panel = this.shadowRoot.querySelector('#panel');
@@ -349,6 +372,14 @@ class UIColorPicker extends HTMLElement {
         panel.querySelector('#btn_reset').removeEventListener('click', this.open);
         panel.querySelector('#btn_done').removeEventListener('click', this.done);
         panel.querySelector('#btn_close').removeEventListener('click', this.close);
+
+        this.#panel.querySelector('#palette').removeEventListener('mousedown', this.onPointPress);
+        this.#panel.querySelector('#hue').removeEventListener('mousedown', this.onPointPress);
+        this.#panel.querySelector('#alpha').removeEventListener('mousedown', this.onPointPress);
+
+        panel.querySelectorAll('.type_wrap input').forEach((input) => {
+            input.removeEventListener('click', this.setType);
+        });
 
         this.shadowRoot.removeChild(panel);
         document.querySelector('html').removeEventListener('mousedown', this.close);
@@ -359,20 +390,68 @@ class UIColorPicker extends HTMLElement {
         const panel = this.shadowRoot.querySelector('#panel');
         if (!panel) return;
 
+        this.style.backgroundColor = this.rgb;
         this.close();
+        this.onchange();
+    }
+
+    #change = 'return false;';
+    onchange() {
+        eval(this.#change);
+    }
+
+    onPointPress(e) {
+        this.#point = e.currentTarget.querySelector('.point');
+
+        window.addEventListener('mousemove', this.onPointMove);
+        window.addEventListener('mouseup', this.onPointRelease);
+        window.addEventListener('mouseleave', this.onPointRelease);
+
+        this.onPointMove(e);
+    }
+
+    onPointMove(e) {
+        const rect = this.#point.parentNode.getBoundingClientRect();
+        const x = e.clientX - rect.x;
+        const y = e.clientY - rect.y;
+
+        switch (this.#point.id) {
+            case 'color_point':
+                this.#setPalettePosition(x, y);
+            break;
+
+            case 'hue_point':
+                this.#setHuePosition(x);
+            break;
+
+            case 'alpha_point':
+                this.#setAlphaPosition(x);
+            break;
+        }
+
+        this.#setPaletteColor();
+        this.#setPointColor();
+    }
+
+    onPointRelease(e) {
+        window.removeEventListener('mousemove', this.onPointMove);
+        window.removeEventListener('mouseup', this.onPointRelease);
+        window.removeEventListener('mouseleave', this.onPointRelease);
+    }
+
+    setType(e) {
+        this.#setColorValue(e.target.id.split('_')[1]);
     }
 
 
     #loadColor() {
-        console.log('+++++++++++++++ loadColor');
-        let color = window.getComputedStyle(this).backgroundColor;
-        let hsv = UIColorPicker.getRGBtoHSV(...color.replace(/[rgb\rgba\(\)]| /gi, '').split(','));
-        console.log('color :', color, ', hsv :', hsv);
+        const color = window.getComputedStyle(this).backgroundColor;
+        const hsv = UIColorPicker.getRGBtoHSV(...color.replace(/[rgb\rgba\(\)]| /gi, '').split(','));
 
         this.#H = hsv[0];
         this.#S = hsv[1];
         this.#V = hsv[2];
-        this.#A = hsv[3];
+        this.#A = this.#useAlpha ? hsv[3] : 1;
 
         this.#setPalettePosition();
         this.#setHuePosition();
@@ -382,7 +461,6 @@ class UIColorPicker extends HTMLElement {
     }
 
     #setPalettePosition(x, y) {
-        console.log('+++++++++++++++ setPalettePosition', x, y);
         const point = this.#panel.querySelector('#color_point');
         const parentRect = point.closest('#palette').getBoundingClientRect();
         const rangeX = parentRect.width;
@@ -408,7 +486,6 @@ class UIColorPicker extends HTMLElement {
     }
 
     #setHuePosition(x) {
-        console.log('+++++++++++++++ setHuePosition', x);
         const point = this.#panel.querySelector('#hue_point');
         const range = point.closest('#hue').getBoundingClientRect().width;
         const correct = point.getBoundingClientRect().width / 2;
@@ -424,7 +501,6 @@ class UIColorPicker extends HTMLElement {
     }
 
     #setAlphaPosition(x) {
-        console.log('+++++++++++++++ setAlphaPosition', x);
         const point = this.#panel.querySelector('#alpha_point');
         const range = point.closest('#alpha').getBoundingClientRect().width;
         const correct = point.getBoundingClientRect().width / 2;
@@ -440,7 +516,6 @@ class UIColorPicker extends HTMLElement {
     }
 
     #setPaletteColor() {
-        console.log('+++++++++++++++ setPaletteColor');
         const h = this.#H * 360;
         const rgb = UIColorPicker.getHSVtoRGB(this.#H, this.#S, this.#V);
 
@@ -462,22 +537,54 @@ class UIColorPicker extends HTMLElement {
     }
 
     #setPointColor() {
-        console.log('+++++++++++++++ setPointColor');
-
         const color = this.rgb;
-        console.log(color);
+
         this.#panel.querySelectorAll('.point .color').forEach((point) => {
             point.style.backgroundColor = color;
         });
 
         const input = this.#panel.querySelector('.value_wrap input');
         input.style.backgroundColor = color;
+        input.style.color = 'hsl(0, 0%, ' + ((1 - this.#V + this.#S / 2) * 90) + '%, 0.9)';
+
+        this.#setColorValue();
+    }
+
+    #setColorValue(type) {
+        if (type != undefined) this.#type = type;
+
+        const input = this.#panel.querySelector('#txt_value');
+
+        switch (this.#type) {
+            case 'hex':
+                input.value = this.hex;
+            break;
+
+            case 'rgb':
+                input.value = this.rgb;
+            break;
+
+            case 'hsl':
+                input.value = this.hsl;
+            break;
+        }
     }
 
 
 
     get hex() {
+        const color = UIColorPicker.getHSVtoRGB(this.#H, this.#S, this.#V, this.#A);
 
+        let ret = "#";
+        ret += Math.floor(color[0]).toString(16);
+        ret += Math.floor(color[1]).toString(16);
+        ret += Math.floor(color[2]).toString(16);
+
+        if (color[3] < 1) {
+            ret += Math.floor(color[3] * 100).toString(16);
+        }
+
+        return ret.toUpperCase();;
     }
 
     get rgb() {
@@ -486,15 +593,40 @@ class UIColorPicker extends HTMLElement {
         if (color[3] == 1) {
             return 'rgb(' + Math.floor(color[0]) + ', ' + Math.floor(color[1]) + ', ' + Math.floor(color[2]) + ')';
         } else {
-            return 'rgba(' + Math.floor(color[0]) + ', ' + Math.floor(color[1]) + ', ' + Math.floor(color[2]) + ', ' + color[3] + ')';
+            return 'rgba(' + Math.floor(color[0]) + ', ' + Math.floor(color[1]) + ', ' + Math.floor(color[2]) + ', ' + color[3].toFixed(2) + ')';
         }
     }
 
     get hsl() {
+        const color = UIColorPicker.getRGBtoHSL(...UIColorPicker.getHSVtoRGB(this.#H, this.#S, this.#V, this.#A));
 
+        if (color[3] == 1) {
+            return 'hsl(' + Math.floor(color[0]) + ', ' + Math.floor(color[1] * 100) + '%, ' + Math.floor(color[2] * 100) + '%)';
+        } else {
+            return 'hsla(' + Math.floor(color[0]) + ', ' + Math.floor(color[1] * 100) + '%, ' + Math.floor(color[2] * 100) + '%, ' + color[3] + ')';
+        }
     }
 
+    static get observedAttributes() {
+        return ['type', 'change', 'alpha'];
+    }
 
+    attributeChangedCallback(attr, oldValue, newValue) {
+        if (attr === 'type') {
+            const type = newValue.toLowerCase();
+            this.#type = type;
+            this.#panel.querySelector('#type_' + type).checked = true;
+        }
+
+        if (attr === 'change') {
+            this.#change = newValue;
+        }
+
+        if (attr === 'alpha') {
+            this.#useAlpha = this.hasAttribute('alpha');
+            this.#panel.querySelector('#alpha').style.display = 'block';
+        }
+    }
 
     static getRGBtoHSV(r, g, b, a) {
         r /= 255, g /= 255, b /= 255, a = (a != undefined) ? parseFloat(a) : 1;
@@ -562,7 +694,7 @@ class UIColorPicker extends HTMLElement {
                 r = v, g = p, b = q;
             break;
         }
-        
+
         return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255), a];
     }
 
@@ -621,11 +753,11 @@ class UIColorPicker extends HTMLElement {
     }
 
     static get ver() {
-        return '1.0.0';
+        return '1.0.1';
     }
 
     static get is() {
-        return 'color-picker';
+        return 'ui-color-picker';
     }
 }
 
