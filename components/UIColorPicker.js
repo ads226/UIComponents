@@ -38,6 +38,7 @@ class UIColorPicker extends HTMLElement {
                 --shadow-point: 0 2px 3px hsl(0, 0%, 0%, 0.3);
 
                 position: relative;
+                display: block;
             }
 
             #knob {
@@ -48,8 +49,8 @@ class UIColorPicker extends HTMLElement {
 
             #panel {
                 position: absolute;
-                top: 100%;
-                left: 0;
+                // top: 0;
+                // left: 0;
 
                 display: flex;
                 flex-flow: column;
@@ -61,6 +62,7 @@ class UIColorPicker extends HTMLElement {
                 padding-bottom: var(--padding);
                 background-color: var(--color-bg);
                 box-shadow: var(--shadow-bg);
+                z-index: 9999;
             }
 
             #palette {
@@ -322,6 +324,7 @@ class UIColorPicker extends HTMLElement {
 
         this.open = this.open.bind(this);
         this.close = this.close.bind(this);
+        this.onClose = this.onClose.bind(this);
         this.done = this.done.bind(this);
         this.setType = this.setType.bind(this);
         this.onPointMove = this.onPointMove.bind(this);
@@ -356,16 +359,37 @@ class UIColorPicker extends HTMLElement {
                 input.addEventListener('click', this.setType);
             });
 
+
+            const thisRect = this.getBoundingClientRect();
+            const panelRect = {
+                width: parseInt(window.getComputedStyle(this).getPropertyValue('--width')),
+                height: parseInt(window.getComputedStyle(this).getPropertyValue('--height'))
+            }
+
+            this.#panel.style.left = 'min(0px, ' + (window.innerWidth - thisRect.left - panelRect.width) + 'px)';
+
+            if (window.innerHeight - thisRect.bottom > panelRect.height) {
+                this.#panel.style.top = '100%';
+            } else {
+                this.#panel.style.left = '100%';
+                this.#panel.style.top = (window.innerHeight - thisRect.top - panelRect.height) + 'px';
+            }
+
             this.shadowRoot.append(this.#panel);
-            document.querySelector('html').addEventListener('mousedown', this.close);
+
+            document.querySelector('html').addEventListener('mousedown', this.onClose);
+            window.addEventListener('scroll', this.close);
+            window.addEventListener('resize', this.close);
         }
 
-        this.#loadColor();
+        this.#init();
+    }
+
+    onClose(e) {
+        if (e.target.closest(UIColorPicker.is) !== this) this.close();
     }
 
     close(e) {
-        if (e && e.target.closest(UIColorPicker.is)) return;
-
         const panel = this.shadowRoot.querySelector('#panel');
         if (!panel) return;
 
@@ -382,7 +406,9 @@ class UIColorPicker extends HTMLElement {
         });
 
         this.shadowRoot.removeChild(panel);
-        document.querySelector('html').removeEventListener('mousedown', this.close);
+        document.querySelector('html').removeEventListener('mousedown', this.onClose);
+        window.removeEventListener('scroll', this.close);
+        window.removeEventListener('resize', this.close);
     }
 
     done(e) {
@@ -443,6 +469,15 @@ class UIColorPicker extends HTMLElement {
         this.#setColorValue(e.target.id.split('_')[1]);
     }
 
+    #init() {
+        this.#loadColor();
+
+        this.#setPalettePosition();
+        this.#setHuePosition();
+        this.#setAlphaPosition();
+        this.#setPaletteColor();
+        this.#setPointColor();
+    }
 
     #loadColor() {
         const color = window.getComputedStyle(this).backgroundColor;
@@ -452,12 +487,6 @@ class UIColorPicker extends HTMLElement {
         this.#S = hsv[1];
         this.#V = hsv[2];
         this.#A = this.#useAlpha ? hsv[3] : 1;
-
-        this.#setPalettePosition();
-        this.#setHuePosition();
-        this.#setAlphaPosition();
-        this.#setPaletteColor();
-        this.#setPointColor();
     }
 
     #setPalettePosition(x, y) {
@@ -570,24 +599,24 @@ class UIColorPicker extends HTMLElement {
         }
     }
 
-
-
     get hex() {
+        this.#loadColor();
         const color = UIColorPicker.getHSVtoRGB(this.#H, this.#S, this.#V, this.#A);
-
+        
         let ret = "#";
-        ret += Math.floor(color[0]).toString(16);
-        ret += Math.floor(color[1]).toString(16);
-        ret += Math.floor(color[2]).toString(16);
+        ret += ('0' + Math.floor(color[0]).toString(16)).slice(-2);
+        ret += ('0' + Math.floor(color[1]).toString(16)).slice(-2);
+        ret += ('0' + Math.floor(color[2]).toString(16)).slice(-2);
 
         if (color[3] < 1) {
-            ret += Math.floor(color[3] * 100).toString(16);
+            ret += ('0' + Math.floor(color[3] * 100).toString(16)).slice(-2);
         }
 
         return ret.toUpperCase();;
     }
 
     get rgb() {
+        this.#loadColor();
         const color = UIColorPicker.getHSVtoRGB(this.#H, this.#S, this.#V, this.#A);
 
         if (color[3] == 1) {
@@ -598,6 +627,7 @@ class UIColorPicker extends HTMLElement {
     }
 
     get hsl() {
+        this.#loadColor();
         const color = UIColorPicker.getRGBtoHSL(...UIColorPicker.getHSVtoRGB(this.#H, this.#S, this.#V, this.#A));
 
         if (color[3] == 1) {
@@ -753,7 +783,7 @@ class UIColorPicker extends HTMLElement {
     }
 
     static get ver() {
-        return '1.0.1';
+        return '1.0.2';
     }
 
     static get is() {

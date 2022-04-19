@@ -7,17 +7,23 @@
         <link rel="stylesheet" href="./css/common.css">
         <style>
             .container {
+                position: relative;
                 display: flex;
+                flex-flow: column;
                 align-items: center;
                 justify-content: center;
                 gap: 10px;
                 width: 400px;
                 height: 160px;
-                margin: 40px auto;
+                margin: 200px 300px;
                 border: 1px solid hsl(200, 50%, 20%, 0.5);
                 
             }
-
+            .wrap {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
             ui-color-picker {
                 width: 20px;
                 height: 20px;
@@ -30,15 +36,30 @@
 
     <body>
         <div class="container">
-            <ui-color-picker type="RGB" alpha change="changeColor(this.rgb);"></ui-color-picker>
-            UI Color Picker
+            <div class="wrap">
+                <ui-color-picker type="RGB" alpha change="changeColor(this.rgb);"></ui-color-picker>
+                UI Color Picker
+            </div>
+            <div class="wrap">
+                <ui-color-picker type="RGB" alpha change="changeColor(this.rgb);"></ui-color-picker>
+                UI Color Picker
+            </div>
+            <div class="wrap">
+                <ui-color-picker type="RGB" alpha change="changeColor(this.rgb);"></ui-color-picker>
+                UI Color Picker
+            </div>
+            <div class="wrap">
+                <ui-color-picker type="RGB" alpha change="changeColor(this.rgb);"></ui-color-picker>
+                UI Color Picker
+            </div>
         </div>
     </body>
 
     <script>
-        function changeColor(color) {
-            console.log('changeColor :', color);
-            document.querySelector('.container').style.color = color;
+        function changeColor(picker) {
+            picker.parentNode.style.color = picker.rgb;
         }
+
+        console.log(document.querySelector('ui-color-picker').hex);
     </script>
 </html>
