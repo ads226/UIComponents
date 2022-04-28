@@ -32,7 +32,6 @@ class UIScrollContainer extends HTMLElement {
             }
 
             #container {
-                position: absolute;
                 width: 100%;
                 height: 100%;
 
@@ -163,7 +162,7 @@ class UIScrollContainer extends HTMLElement {
         this.#container = this.#root.querySelector('#container');
         this.#shadowTop = this.#root.querySelector('#shadow_top');
         this.#shadowBtm = this.#root.querySelector('#shadow_btm');
-        
+
         this.scrolling = this.scrolling.bind(this);
         this.onScrolling = this.onScrolling.bind(this);
 
@@ -176,8 +175,8 @@ class UIScrollContainer extends HTMLElement {
         this.#container.addEventListener('scroll', this.onScrolling);
 
         setTimeout(() => {
-			this.onScrolling();
-		});
+            this.onScrolling();
+        });
     }
 
     disconnectedCallback() {

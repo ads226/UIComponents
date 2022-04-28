@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>UIDataList</title>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="./css/common.css">
+        <style>
+            .container {
+                width: 500px;
+                height: 300px;
+                margin: 50px auto;
+                border: 1px solid lightgray;
+            }
+        </style>
+        <script src="/components/UIDataList.js"></script>
+    </head>
+
+    <body>
+        <div class="container">
+            <ui-data-list></ui-data-list>
+        </div>
+    </body>
+
+    <script>
+        const data = {
+            head: ['순위', '교차로명', '신호제어 교차로ID', '지체시간 (sec/대)'],
+            body: [
+                [1, '30200', '-', '78.1'],
+                [2, '30125', '215', '48.4'],
+                [3, '30156', '498', '47.3'],
+                [4, '새강마을사거리', '-', '78.1'],
+                [5, '공원로사거리', '26', '48.4'],
+                [6, '30059', '17', '47.3'],
+                [7, '30201', '216', '78.1'],
+                [8, '나래을사거리', '127', '48.4'],
+                [9, '30362', '-', '47.3']
+            ]
+        }
+
+        const list = document.querySelector('ui-data-list');
+        list.init(data);
+    </script>
+</html>
