@@ -26,7 +26,7 @@ class UIDatePicker extends HTMLElement {
             --panel-bg-color: hsl(200, 15%, 25%, 1.00);
             --panel-shadow: 0 4px 10px hsl(0, 0%, 0%, 0.20), 0 2px 6px hsl(0, 0%, 0%, 0.30);
 
-            --head-height: 70px;
+            --head-height: 72px;
             --head-item-height: calc(var(--head-height) / 3);
             --head-txt-color: hsl(200, 25%, 90%, 1.00);
             --head-shadow: 0 2px 3px hsl(0, 0%, 0%, 0.1);
@@ -77,14 +77,20 @@ class UIDatePicker extends HTMLElement {
             width: 80px;
         }
 
-        #year_items {
+        #month_wrap {
+            width: 40px;
+        }
+
+        #year_items,
+        #month_items {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
         }
 
-        .year_item {
+        .year_item,
+        .month_item {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -95,7 +101,8 @@ class UIDatePicker extends HTMLElement {
             opacity: 0;
         }
 
-        .year_item.selected {
+        .year_item.selected,
+        .month_item.selected {
             font-size: 17px;
             opacity: 1;
         }
@@ -160,6 +167,11 @@ class UIDatePicker extends HTMLElement {
         </div>
         `;
 
+        const monthItems = this.#panel.querySelector('#month_items');
+        for (let i = 0; i < 23; ++ i) {
+            monthItems.innerHTML += '<div class="month_item"></div>';
+        }
+
         this.open = this.open.bind(this);
         this.close = this.close.bind(this);
         this.onClose = this.onClose.bind(this);
@@ -215,6 +227,7 @@ class UIDatePicker extends HTMLElement {
 
     #initPanel() {
         this.#initPanelYear();
+        this.#initPanelMonth();
 
         this.#isLock = false;
     }
@@ -222,7 +235,7 @@ class UIDatePicker extends HTMLElement {
     #initPanelYear() {
         const items = this.#panel.querySelector('#year_items');
         items.classList.remove('tr');
-        items.style.top = 0;
+        items.style.top = '0px';
         items.querySelectorAll('.year_item').forEach((item, idx) => {
             item.innerHTML = this.#date.getFullYear() - 1 + idx + '년';
             item.classList.toggle('selected', idx === 1);
@@ -241,7 +254,11 @@ class UIDatePicker extends HTMLElement {
         if (this.#isLock) return;
         this.#isLock = true;
 
-        const delta = (e.currentTarget.id === 'year_up') ? 1 : -1;
+        this.onYearSlide(e.currentTarget.id === 'year_up' ? 1 : -1);
+
+    }
+
+    onYearSlide(delta) {
         this.#date.setFullYear(this.#date.getFullYear() + delta);
 
         const items = this.#panel.querySelector('#year_items');
@@ -267,6 +284,29 @@ class UIDatePicker extends HTMLElement {
         setTimeout(() => {
             this.#isLock = false;
         });
+    }
+
+    #initPanelMonth() {
+        const itemHeight = parseInt(window.getComputedStyle(this).getPropertyValue('--head-height')) / 3 || 24;
+        const items = this.#panel.querySelector('#month_items');
+        
+        items.classList.remove('tr');
+        items.style.top = '-' + (itemHeight * 10) + 'px';
+        items.querySelectorAll('.month_item').forEach((item, idx) => {
+            item.innerHTML = (this.#date.getMonth() + 13 + idx) % 12 + 1 + '월';
+            item.classList.toggle('selected', idx === 11);
+        });
+
+        this.#updatePanelMonth();
+    }
+
+    #updatePanelMonth() {
+        const dateMonthValue = this.#date.getFullYear() * 12 + this.#date.getMonth();
+        const maxMonthValue = this.#max.getFullYear() * 12 + this.#max.getMonth();
+        const minMonthValue = this.#min.getFullYear() * 12 + this.#min.getMonth();
+
+        this.#panel.querySelector('#month_up').classList.toggle('disabled', dateMonthValue == maxMonthValue);
+        this.#panel.querySelector('#month_down').classList.toggle('disabled', dateMonthValue == minMonthValue);
     }
 
     get value() {
