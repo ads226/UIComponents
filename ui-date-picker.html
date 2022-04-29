@@ -26,6 +26,7 @@
                 padding: 0 4px;
                 border: 1px solid gray;
                 background-color: lightgray;
+                pointer-events: none;
             }
         </style>
         <script src="/components/UIDatePicker.js"></script>
@@ -41,5 +42,8 @@
         function onDateChanged(picker) {
             console.log(picker, picker.value);
         }
+
+        const dPicker = document.querySelector(UIDatePicker.is);
+        console.log(dPicker.value, dPicker.min, dPicker.max);
     </script>
 </html>
