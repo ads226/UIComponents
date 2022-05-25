@@ -1,14 +1,7 @@
 class UIColorPicker extends HTMLElement {
     #knob = document.createElement('div');
-    #panel = document.createElement('div');
+    #panel;
     #type = 'hex';
-    #point
-
-    #H = 0;
-    #S = 0;
-    #V = 0;
-    #A = 1;
-
     #useAlpha = false;
 
     constructor() {
@@ -46,23 +39,245 @@ class UIColorPicker extends HTMLElement {
                 height: 100%;
                 cursor: pointer;
             }
+        `;
+
+        this.#knob.id = 'knob';
+
+        this.open = this.open.bind(this);
+        this.close = this.close.bind(this);
+        this.closed = this.closed.bind(this);
+        this.onClose = this.onClose.bind(this);
+        this.done = this.done.bind(this);
+
+        const shadow = this.attachShadow({ mode: 'open' });
+        shadow.append(style, this.#knob);
+    }
+
+    connectedCallback() {
+        this.#knob.addEventListener('click', this.open);
+    }
+
+    disconnectedCallback() {
+        this.close();
+        this.#knob.removeEventListener('click', this.open);
+    }
+
+    open(e) {
+        if (this.#panel) this.close();
+
+        const thisStyle = window.getComputedStyle(this);
+        const thisRect = this.getBoundingClientRect();
+        const panelWidth = parseInt(thisStyle.getPropertyValue('--width'));
+        const panelHeight = parseInt(thisStyle.getPropertyValue('--height'));
+
+        this.#panel = document.createElement(UIColorPickerPanel.is);
+        this.#panel.style.textContent = `
+            --width: ${ panelWidth + 'px' };
+            --height: ${ panelHeight + 'px' };
+            --padding: ${ thisStyle.getPropertyValue('--padding') };
+
+            --color-bg: ${ thisStyle.getPropertyValue('--color-bg') };
+            --color-line: ${ thisStyle.getPropertyValue('--color-line') };
+            --color-text: ${ thisStyle.getPropertyValue('--color-text') };
+            --color-focus: ${ thisStyle.getPropertyValue('--color-focus') };
+            --color-btn: ${ thisStyle.getPropertyValue('--color-btn') };
+
+            --shadow-bg: ${ thisStyle.getPropertyValue('--shadow-bg') };
+            --shadow-point: ${ thisStyle.getPropertyValue('--shadow-point') };
+        `;
+        this.#panel.setAttribute('type', this.#type);
+        if (this.#useAlpha) this.#panel.attributes.setNamedItem(document.createAttribute('alpha'));
+        this.#panel.setAttribute('color', thisStyle.backgroundColor);
+
+        if (window.innerHeight - thisRect.bottom < panelHeight) {
+            this.#panel.style.top = thisRect.top - panelHeight + 'px';
+        } else {
+            this.#panel.style.top = thisRect.bottom + 'px';
+        }
+
+        this.#panel.style.left = 'min(' + thisRect.left + 'px, ' + (window.innerWidth - panelWidth) + 'px)';
+
+        this.#panel.addEventListener(UIColorPickerPanel.ON_CLICK_DONE, this.done);
+        this.#panel.addEventListener(UIColorPickerPanel.ON_CLICK_CLOSE, this.close);
+        this.#panel.addEventListener(UIColorPickerPanel.ON_CLOSED, this.closed);
+
+        document.querySelector('html').addEventListener('mousedown', this.onClose);
+        window.addEventListener('scroll', this.close);
+        window.addEventListener('resize', this.close);
+
+        document.querySelector('body').append(this.#panel);
+    }
+
+    close(e) {
+        if (!this.#panel) return;
+        this.#panel.remove();
+    }
+
+    closed() {
+        this.#panel.removeEventListener(UIColorPickerPanel.ON_CLICK_DONE, this.done);
+        this.#panel.removeEventListener(UIColorPickerPanel.ON_CLICK_CLOSE, this.close);
+        this.#panel.removeEventListener(UIColorPickerPanel.ON_CLOSED, this.closed);
+
+        document.querySelector('html').removeEventListener('mousedown', this.onClose);
+        window.removeEventListener('scroll', this.close);
+        window.removeEventListener('resize', this.close);
+    }
+
+    onClose(e) {
+        if (e.target.closest(UIColorPickerPanel.is) !== this.#panel) this.close();
+    }
+
+    done(e) {
+        if (!this.#panel) return;
+
+        this.style.backgroundColor = this.#panel.rgb;
+        this.close();
+        this.change();
+    }
+
+    change() {
+		if (this.hasAttribute('onchange')) this.onchange.bind(this).call();
+    }
+
+    get hex() {
+        const color = this.rgbArray;
+
+        let ret = "#";
+        ret += ('0' + Math.floor(color[0]).toString(16)).slice(-2);
+        ret += ('0' + Math.floor(color[1]).toString(16)).slice(-2);
+        ret += ('0' + Math.floor(color[2]).toString(16)).slice(-2);
+
+        if (color[3] < 1) {
+            ret += ('0' + Math.floor(color[3] * 100).toString(16)).slice(-2);
+        }
+
+        return ret.toUpperCase();
+    }
+
+    get rgb() {
+        return window.getComputedStyle(this).backgroundColor;
+    }
+
+    get rgbArray() {
+		return this.rgb.replace(/[rgb\rgba\(\)]| /gi, '').split(',');
+	}
+
+    get hsl() {
+        const color = UIColorPickerPanel.getRGBtoHSL(...this.rgbArray);
+        const str = Math.floor(color[0]) + ', ' + Math.floor(color[1] * 100) + '%, ' + Math.floor(color[2] * 100) + '%';
+        
+        if (color[3] == 1) {
+            return 'hsl(' + str + ')';
+        } else {
+            return 'hsla(' + str + ', ' + color[3] + ')';
+        }
+    }
+
+    static get observedAttributes() {
+        return ['type', 'alpha'];
+    }
+
+    attributeChangedCallback(attr, oldValue, newValue) {
+        if (attr === 'type') {
+            const type = newValue.toLowerCase();
+            this.#type = type;
+            if (this.#panel) this.#panel.setAttribute('type', this.#type);
+        }
+
+        if (attr === 'alpha') {
+            this.#useAlpha = this.hasAttribute('alpha');
+            if (this.#panel) this.#panel.attributes.setNamedItem(document.createAttribute('alpha'));
+        }
+    }
+
+    static getRGBtoHEX(r, g, b) {
+		return UIColorPickerPanel.getRGBtoHEX(r, g, b);
+	}
+
+    static getRGBtoHSV(r, g, b, a) {
+        return UIColorPickerPanel.getRGBtoHSV(r, g, b, a);
+    }
+
+    static getHSVtoRGB(h, s, v, a) {
+        return UIColorPickerPanel.getHSVtoRGB(h, s, v, a);
+    }
+
+    static getRGBtoHSL(r, g, b, a) {
+        return UIColorPickerPanel.getRGBtoHSL(r, g, b, a);
+    }
+
+    static getHSLtoRGB(h, s, l, a) {
+        return UIColorPickerPanel.getHSLtoRGB(h, s, l, a);
+    }
+
+    static get ver() {
+        return '1.1.0';
+    }
+
+    static get is() {
+        return 'ui-color-picker';
+    }
+}
+
+customElements.define(UIColorPicker.is, UIColorPicker);
+
+
+class UIColorPickerPanel extends HTMLElement {
+    #panel = document.createElement('div');
+    #type = 'hex';
+    #point
+
+    #H = 0;
+    #S = 0;
+    #V = 0;
+    #A = 1;
+    #store = [this.#H, this.#S, this.#V, this.#A];
+
+    #useAlpha = false;
+
+    constructor() {
+        super();
+
+        const style = document.createElement('style');
+        style.textContent = `
+            :host,
+            :host * {
+                margin: 0;
+                padding: 0;
+                border: 0;
+                box-sizing: border-box;
+            }
+
+            :host {
+                --width: 260px;
+                --height: 250px;
+                --padding: 12px;
+
+                --color-bg: hsl(200, 15%, 25%, 1.00);
+                --color-line: hsl(200, 20%, 35%, 1.00);
+                --color-text: hsl(0, 0%, 80%, 0.75);
+                --color-focus: hsl(200, 80%, 40%, 1.00);
+                --color-btn: hsl(200, 50%, 35%, 1.00);
+
+                --shadow-bg: 0 4px 10px hsl(0, 0%, 0%, 0.20), 0 2px 6px hsl(0, 0%, 0%, 0.30);
+                --shadow-point: 0 2px 3px hsl(0, 0%, 0%, 0.3);
+
+                position: fixed;
+                z-index: 99999999;
+                padding: 10px 10px 0 !important;
+                transform: translate(-10px, -10px);
+            }
 
             #panel {
-                position: absolute;
-                // top: 0;
-                // left: 0;
-
                 display: flex;
                 flex-flow: column;
                 align-items: center;
                 gap: 12px;
-
                 width: var(--width);
                 height: var(--height);
                 padding-bottom: var(--padding);
                 background-color: var(--color-bg);
                 box-shadow: var(--shadow-bg);
-                z-index: 9999;
             }
 
             #palette {
@@ -254,7 +469,6 @@ class UIColorPicker extends HTMLElement {
             }
         `;
 
-        this.#knob.id = 'knob';
         this.#panel.id = 'panel';
         this.#panel.innerHTML = `
             <div id="palette">
@@ -322,108 +536,51 @@ class UIColorPicker extends HTMLElement {
             `;
         });
 
-        this.open = this.open.bind(this);
-        this.close = this.close.bind(this);
-        this.onClose = this.onClose.bind(this);
+        this.init = this.init.bind(this);
+        this.reset = this.reset.bind(this);
         this.done = this.done.bind(this);
+        this.close = this.close.bind(this);
         this.setType = this.setType.bind(this);
         this.onPointMove = this.onPointMove.bind(this);
         this.onPointPress = this.onPointPress.bind(this);
         this.onPointRelease = this.onPointRelease.bind(this);
 
         const shadow = this.attachShadow({ mode: 'open' });
-        shadow.append(style, this.#knob);
+        shadow.append(style, this.#panel);
     }
 
     connectedCallback() {
-        this.#knob.addEventListener('click', this.open);
+
+        this.#panel.querySelector('#palette').addEventListener('mousedown', this.onPointPress);
+        this.#panel.querySelector('#hue').addEventListener('mousedown', this.onPointPress);
+        this.#panel.querySelector('#alpha').addEventListener('mousedown', this.onPointPress);
+
+        this.#panel.querySelector('#btn_reset').addEventListener('click', this.reset);
+        this.#panel.querySelector('#btn_done').addEventListener('click', this.done);
+        this.#panel.querySelector('#btn_close').addEventListener('click', this.close);
+
+        this.#panel.querySelectorAll('.type_wrap input').forEach((input) => {
+            input.addEventListener('click', this.setType);
+        });
+
+        this.init();
     }
 
     disconnectedCallback() {
-        this.#knob.removeEventListener('click', this.open);
-    }
-
-    open(e) {
-        const panel = this.shadowRoot.querySelector('#panel');
-
-        if (!panel) {
-            this.#panel.querySelector('#btn_reset').addEventListener('click', this.open);
-            this.#panel.querySelector('#btn_done').addEventListener('click', this.done);
-            this.#panel.querySelector('#btn_close').addEventListener('click', this.close);
-
-            this.#panel.querySelector('#palette').addEventListener('mousedown', this.onPointPress);
-            this.#panel.querySelector('#hue').addEventListener('mousedown', this.onPointPress);
-            this.#panel.querySelector('#alpha').addEventListener('mousedown', this.onPointPress);
-
-            this.#panel.querySelectorAll('.type_wrap input').forEach((input) => {
-                input.addEventListener('click', this.setType);
-            });
-
-
-            const thisRect = this.getBoundingClientRect();
-            const panelRect = {
-                width: parseInt(window.getComputedStyle(this).getPropertyValue('--width')),
-                height: parseInt(window.getComputedStyle(this).getPropertyValue('--height'))
-            }
-
-            this.#panel.style.left = 'min(0px, ' + (window.innerWidth - thisRect.left - panelRect.width) + 'px)';
-
-            if (window.innerHeight - thisRect.bottom > panelRect.height) {
-                this.#panel.style.top = '100%';
-            } else {
-                this.#panel.style.left = '100%';
-                this.#panel.style.top = (window.innerHeight - thisRect.top - panelRect.height) + 'px';
-            }
-
-            this.shadowRoot.append(this.#panel);
-
-            document.querySelector('html').addEventListener('mousedown', this.onClose);
-            window.addEventListener('scroll', this.close);
-            window.addEventListener('resize', this.close);
-        }
-
-        this.#init();
-    }
-
-    onClose(e) {
-        if (e.target.closest(UIColorPicker.is) !== this) this.close();
-    }
-
-    close(e) {
-        const panel = this.shadowRoot.querySelector('#panel');
-        if (!panel) return;
-
-        panel.querySelector('#btn_reset').removeEventListener('click', this.open);
-        panel.querySelector('#btn_done').removeEventListener('click', this.done);
-        panel.querySelector('#btn_close').removeEventListener('click', this.close);
-
         this.#panel.querySelector('#palette').removeEventListener('mousedown', this.onPointPress);
         this.#panel.querySelector('#hue').removeEventListener('mousedown', this.onPointPress);
         this.#panel.querySelector('#alpha').removeEventListener('mousedown', this.onPointPress);
 
-        panel.querySelectorAll('.type_wrap input').forEach((input) => {
+        this.#panel.querySelector('#btn_reset').removeEventListener('click', this.reset);
+        this.#panel.querySelector('#btn_done').removeEventListener('click', this.done);
+        this.#panel.querySelector('#btn_close').removeEventListener('click', this.close);
+
+        this.#panel.querySelectorAll('.type_wrap input').forEach((input) => {
             input.removeEventListener('click', this.setType);
         });
 
-        this.shadowRoot.removeChild(panel);
-        document.querySelector('html').removeEventListener('mousedown', this.onClose);
-        window.removeEventListener('scroll', this.close);
-        window.removeEventListener('resize', this.close);
-    }
-
-    done(e) {
-        console.log('+++++++++++++++ done', e.target);
-        const panel = this.shadowRoot.querySelector('#panel');
-        if (!panel) return;
-
-        this.style.backgroundColor = this.rgb;
-        this.close();
-        this.onchange();
-    }
-
-    #change = 'return false;';
-    onchange() {
-        eval(this.#change);
+        this.onPointRelease();
+        this.dispatchEvent(new Event(UIColorPickerPanel.ON_CLOSED));
     }
 
     onPointPress(e) {
@@ -465,12 +622,31 @@ class UIColorPicker extends HTMLElement {
         window.removeEventListener('mouseleave', this.onPointRelease);
     }
 
+    reset() {
+        this.init();
+    }
+
+    done() {
+        this.dispatchEvent(new Event(UIColorPickerPanel.ON_CLICK_DONE));
+    }
+
+    close() {
+        this.dispatchEvent(new Event(UIColorPickerPanel.ON_CLICK_CLOSE));
+    }
+
     setType(e) {
         this.#setColorValue(e.target.id.split('_')[1]);
     }
 
-    #init() {
-        this.#loadColor();
+    init(color) {
+        if (color != undefined) {
+            this.#setColor(color);
+        } else {
+            this.#H = this.#store[0];
+            this.#S = this.#store[1];
+            this.#V = this.#store[2];
+            this.#A = this.#store[3];
+        }
 
         this.#setPalettePosition();
         this.#setHuePosition();
@@ -479,14 +655,27 @@ class UIColorPicker extends HTMLElement {
         this.#setPointColor();
     }
 
-    #loadColor() {
-        const color = window.getComputedStyle(this).backgroundColor;
-        const hsv = UIColorPicker.getRGBtoHSV(...color.replace(/[rgb\rgba\(\)]| /gi, '').split(','));
+    #setColor(color) {
+        if (typeof color === 'string') {
+            if (!!~color.indexOf('#')) {
+                color = color.trim().replace('#', '');
+                color = UIColorPickerPanel.getHEXtoRGB(color);
+            } else if (!!~color.indexOf('rgb')) {
+                color = color.trim().replace(/[rgb\rgba\(\)]| /gi, '').split(',');
+            } else {
+                return console.error('color type을 알 수 없음 :', color);
+            }
 
-        this.#H = hsv[0];
-        this.#S = hsv[1];
-        this.#V = hsv[2];
-        this.#A = this.#useAlpha ? hsv[3] : 1;
+            color = UIColorPickerPanel.getRGBtoHSV(...color);
+        } else {
+            return console.error('color type을 알 수 없음 :', color);
+        }
+        
+        this.#H = color[0];
+        this.#S = color[1];
+        this.#V = color[2];
+        this.#A = this.#useAlpha ? color[3] : 1;
+        this.#store = [this.#H, this.#S, this.#V, this.#A];
     }
 
     #setPalettePosition(x, y) {
@@ -546,7 +735,7 @@ class UIColorPicker extends HTMLElement {
 
     #setPaletteColor() {
         const h = this.#H * 360;
-        const rgb = UIColorPicker.getHSVtoRGB(this.#H, this.#S, this.#V);
+        const rgb = UIColorPickerPanel.getHSVtoRGB(this.#H, this.#S, this.#V);
 
         this.#panel.querySelector('#palette').style.background = `
             linear-gradient(
@@ -574,8 +763,8 @@ class UIColorPicker extends HTMLElement {
 
         const input = this.#panel.querySelector('.value_wrap input');
         input.style.backgroundColor = color;
-        input.style.color = 'hsl(0, 0%, ' + ((1 - this.#V + this.#S / 2) * 90) + '%, 0.9)';
-
+        input.style.color = 'hsl(0, 0%, ' + (this.#S - this.#V < -0.5 ? 0 : 100) + '%, 0.9)';
+        
         this.#setColorValue();
     }
 
@@ -600,8 +789,7 @@ class UIColorPicker extends HTMLElement {
     }
 
     get hex() {
-        this.#loadColor();
-        const color = UIColorPicker.getHSVtoRGB(this.#H, this.#S, this.#V, this.#A);
+        const color = UIColorPickerPanel.getHSVtoRGB(this.#H, this.#S, this.#V, this.#A);
         
         let ret = "#";
         ret += ('0' + Math.floor(color[0]).toString(16)).slice(-2);
@@ -616,8 +804,7 @@ class UIColorPicker extends HTMLElement {
     }
 
     get rgb() {
-        this.#loadColor();
-        const color = UIColorPicker.getHSVtoRGB(this.#H, this.#S, this.#V, this.#A);
+        const color = UIColorPickerPanel.getHSVtoRGB(this.#H, this.#S, this.#V, this.#A);
 
         if (color[3] == 1) {
             return 'rgb(' + Math.floor(color[0]) + ', ' + Math.floor(color[1]) + ', ' + Math.floor(color[2]) + ')';
@@ -627,18 +814,13 @@ class UIColorPicker extends HTMLElement {
     }
 
     get hsl() {
-        this.#loadColor();
-        const color = UIColorPicker.getRGBtoHSL(...UIColorPicker.getHSVtoRGB(this.#H, this.#S, this.#V, this.#A));
+        const color = UIColorPickerPanel.getRGBtoHSL(...UIColorPickerPanel.getHSVtoRGB(this.#H, this.#S, this.#V, this.#A));
 
         if (color[3] == 1) {
             return 'hsl(' + Math.floor(color[0]) + ', ' + Math.floor(color[1] * 100) + '%, ' + Math.floor(color[2] * 100) + '%)';
         } else {
-            return 'hsla(' + Math.floor(color[0]) + ', ' + Math.floor(color[1] * 100) + '%, ' + Math.floor(color[2] * 100) + '%, ' + color[3] + ')';
+            return 'hsla(' + Math.floor(color[0]) + ', ' + Math.floor(color[1] * 100) + '%, ' + Math.floor(color[2] * 100) + '%, ' + color[3].toFixed(2) + ')';
         }
-    }
-
-    static get observedAttributes() {
-        return ['type', 'change', 'alpha'];
     }
 
     attributeChangedCallback(attr, oldValue, newValue) {
@@ -648,14 +830,32 @@ class UIColorPicker extends HTMLElement {
             this.#panel.querySelector('#type_' + type).checked = true;
         }
 
-        if (attr === 'change') {
-            this.#change = newValue;
-        }
-
         if (attr === 'alpha') {
             this.#useAlpha = this.hasAttribute('alpha');
             this.#panel.querySelector('#alpha').style.display = 'block';
         }
+
+        if (attr === 'color') {
+            this.init(newValue);
+        }
+    }
+
+    static get observedAttributes() {
+        return ['type', 'alpha', 'color'];
+    }
+
+    static getHEXtoRGB(h) {
+        let rgb = (h.length === 3) ? h.match( /[a-f\d]/gi ) : h.match( /[a-f\d]{2}/gi );
+        if (rgb.length === 3) rgb.push('ff');
+
+        rgb.forEach((str, idx, arr) => {
+            if (str.length === 1) str = str + str;
+
+            arr[idx] = parseInt(str, 16);
+            if (idx === 3) arr[idx] /= 255;
+        });
+
+        return rgb;
     }
 
     static getRGBtoHSV(r, g, b, a) {
@@ -685,9 +885,18 @@ class UIColorPicker extends HTMLElement {
 
             h /= 6;
         }
-
+        
         return [h, s, v, a];
     }
+
+    static getRGBtoHEX(r, g, b) {
+		let ret = "#";
+        ret += ('0' + Math.floor(r).toString(16)).slice(-2);
+        ret += ('0' + Math.floor(g).toString(16)).slice(-2);
+        ret += ('0' + Math.floor(b).toString(16)).slice(-2);
+        
+		return ret.toUpperCase();
+	}
 
     static getHSVtoRGB(h, s, v, a) {
         let r, g, b;
@@ -782,13 +991,25 @@ class UIColorPicker extends HTMLElement {
         return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255), a];
     }
 
+    static get ON_CLICK_DONE() {
+        return 'onClickDone';
+    }
+
+    static get ON_CLICK_CLOSE() {
+        return 'onClickClose';
+    }
+
+    static get  ON_CLOSED() {
+        return 'onClosed';
+    }
+
     static get ver() {
-        return '1.0.2';
+        return '1.0.0';
     }
 
     static get is() {
-        return 'ui-color-picker';
+        return 'ui-color-picker-panel';
     }
 }
 
-customElements.define(UIColorPicker.is, UIColorPicker);
+customElements.define(UIColorPickerPanel.is, UIColorPickerPanel);
