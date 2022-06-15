@@ -507,7 +507,7 @@ export class UIColorPickerPanel extends HTMLElement {
                 text-align: center;
                 color: var(--color-text);
             }
-            */
+
             #btn_copy {
                 font-size: 10px;
                 line-height: 32px;
@@ -515,11 +515,7 @@ export class UIColorPickerPanel extends HTMLElement {
                 text-align: center;
                 border-radius: 4px;
             }
-            
-            #btn_copy svg {
-                position: relative;
-                width: 20px;
-            }
+            */
         `;
         
         style.textContent += `
@@ -590,13 +586,13 @@ export class UIColorPickerPanel extends HTMLElement {
                 </div>
             </div>
             <div id="btn_copy" class="btn">
-                
+                <!--
                 <svg viewBox="0 0 20 20">
                     <path d="M15.5,1h-7C7.1,1,6,2.1,6,3.5V5H4C2.9,5,2,5.9,2,7v10c0,1.1,0.9,2,2,2h8c1.1,0,2-0.9,2-2v-2h1.5c1.4,0,2.5-1.1,2.5-2.5v-9
                         C18,2.1,16.9,1,15.5,1z M17,12.5c0,0.8-0.7,1.5-1.5,1.5H14V7c0-1.1-0.9-2-2-2H7V3.5C7,2.7,7.7,2,8.5,2h7C16.3,2,17,2.7,17,3.5V12.5z
                         "/>
                 </svg>
-                
+                -->
             </div>
 
             

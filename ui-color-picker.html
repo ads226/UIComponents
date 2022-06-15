@@ -24,6 +24,7 @@
                 display: flex;
                 align-items: center;
                 gap: 8px;
+                
             }
             ui-color-picker {
                 width: 20px;
@@ -33,33 +34,15 @@
             }
 
             ui-color-picker-panel {
-                
+                margin: 50px;
             }
         </style>
-        <script src="./components/UIColorPicker.js"></script>
+        
+        <script type="module" src="./components/Color.js"></script>
     </head>
 
     <body>
         <!-- 
-        <div class="container">
-            <div class="wrap">
-                <ui-color-picker type="RGB" alpha change="changeColor(this.rgb);"></ui-color-picker>
-                UI Color Picker
-            </div>
-            <div class="wrap">
-                <ui-color-picker type="RGB" alpha change="changeColor(this.rgb);"></ui-color-picker>
-                UI Color Picker
-            </div>
-            <div class="wrap">
-                <ui-color-picker type="RGB" alpha change="changeColor(this.rgb);"></ui-color-picker>
-                UI Color Picker
-            </div>
-            <div class="wrap">
-                <ui-color-picker type="RGB" alpha change="changeColor(this.rgb);"></ui-color-picker>
-                UI Color Picker
-            </div>
-        </div>
-        -->
         <div class="container">
             <ui-color-picker change="changeColor(this);"></ui-color-picker>
         </div>
@@ -71,8 +54,8 @@
         <div class="container" style="top: 850px; left: 700px;">
             <ui-color-picker change="changeColor(this);"></ui-color-picker>
         </div>
-
-        <!-- <ui-color-picker-panel type="rgb" color="rgb(23, 120, 213)" alpha></ui-color-picker-panel> -->
+        -->
+        <ui-color-picker-panel type="rgb" color="rgb(23, 120, 213)" alpha></ui-color-picker-panel>
     </body>
 
     <script>

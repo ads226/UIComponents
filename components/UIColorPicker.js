@@ -1,4 +1,4 @@
-class UIColorPicker extends HTMLElement {
+export class UIColorPicker extends HTMLElement {
     #knob = document.createElement('div');
     #panel;
     #type = 'hex';
@@ -222,7 +222,7 @@ class UIColorPicker extends HTMLElement {
 customElements.define(UIColorPicker.is, UIColorPicker);
 
 
-class UIColorPickerPanel extends HTMLElement {
+export class UIColorPickerPanel extends HTMLElement {
     #panel = document.createElement('div');
     #type = 'hex';
     #point
