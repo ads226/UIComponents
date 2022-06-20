@@ -5,51 +5,75 @@ class Color {
     #A = 1;
 
     constructor(colorValue) {
-        if (colorValue !== undefined) this.rgb = Color.parseRGB(colorValue);
+        this.init(colorValue);
     }
 
-    get hex() { return Color.rgb2hex(...this.rgb); }
-    set hex(value) { [this.#H, this.#S, this.#V, this.#A] = Color.rgb2hsv(...Color.hex2rgb(value)); }
-
-    get rgb() { return Color.hsv2rgb(this.#H, this.#S, this.#V, this.#A); }
-    set rgb(value) { [this.#H, this.#S, this.#V, this.#A] = Color.rgb2hsv(...value); }
-
-    get hsl() { return Color.rgb2hsl(...this.rgb); }
-    set hsl(value) { [this.#H, this.#S, this.#V, this.#A] = Color.rgb2hsv(...Color.hsl2rgb(...value)); }
-
-    get h() { return this.#H; }
-    set h(value) { this.#H = Math.min(Math.max(value, 0), 1); }
-
-    get s() { return this.#S; }
-    set s(value) { this.#S = Math.min(Math.max(value, 0), 1); }
-
-    get v() { return this.#V; }
-    set v(value) { this.#V = Math.min(Math.max(value, 0), 1); }
-
-    get a() { return this.#A; }
-    set a(value) { this.#A = Math.min(Math.max(value, 0), 1); }
-
-    static parseRGB(colorValue) {
+    init(colorValue) {
+        if (colorValue === undefined) return;
+        
+        let color;
+        
         if (typeof colorValue === 'string') {
             colorValue = colorValue.toLowerCase();
 
-            if (colorValue.startsWith('#')) {
-                return Color.hex2rgb(colorValue);
-            } else if (colorValue.startsWith('rgb')) {
-                return colorValue.trim().replace(/[rgb\rgba\(\)]| /gi, '').split(',').map(Number);
-            } else if (colorValue.startsWith('hsl')) {
-                throw('Color.parseRGB : hsl 형 string의 변환은 아직 지원하지 않습니다! -> ' + colorValue);
+            if (colorValue.includes('#')) {
+                color = Color.rgb2hsv(...Color.hex2rgb(colorValue));
+            } else if (colorValue.includes('rgb')) {
+                color = colorValue.trim().replace(/[rgb\rgba\(\)]| /gi, '').split(',');
+                color = Color.rgb2hsv(...color);
+            } else if (colorValue.includes('hsl')) {
+                console.log('hsl');
             }
-        } else {
-            throw('Color.parseRGB : param의 datatype이 string이 아닙니다! -> ' + colorValue);
+        } else if (Array.isArray(colorValue)) {
+            console.log(colorValue);
         }
+
+        [this.#H, this.#S, this.#V, this.#A] = color;
     }
+
+    get hex() {
+        return Color.rgb2hex(...this.rgb);
+    }
+
+    set hex(value) {
+        [this.#H, this.#S, this.#V, this.#A] = Color.rgb2hsv(...Color.hex2rgb(value));
+    }
+
+    get rgb() {
+        return Color.hsv2rgb(this.#H, this.#S, this.#V, this.#A);
+    }
+    get rgbObj() {
+        const rgb = Color.hsv2rgb(this.#H, this.#S, this.#V, this.#A);
+        return { r:rgb[0], g:rgb[1], b:rgb[2], a:rgb[3] }
+    }
+
+    set rgb(values) {
+        [this.#H, this.#S, this.#V, this.#A] = Color.rgb2hsv(...values);
+    }
+
+    get hsl() {
+        return Color.rgb2hsl(...this.rgb);
+    }
+
+    set hsl(values) {
+        [this.#H, this.#S, this.#V, this.#A] = Color.rgb2hsv(...Color.hsl2rgb(...values));
+    }
+
+    get h() { return this.#H; }
+    set h(value) { this.#H = Math.min(Math.max(value, 0), 1); }
+    
+    get s() { return this.#S; }
+    set s(value) { this.#S = Math.min(Math.max(value, 0), 1); }
+    
+    get v() { return this.#V; }
+    set v(value) { this.#V = Math.min(Math.max(value, 0), 1); }
+    
+    get a() { return this.#A; }
+    set a(value) { this.#A = Math.min(Math.max(value, 0), 1); }
 
     static hex2rgb(hex) {
         const rgb = (hex.length === 3) ? hex.match( /[a-f\d]/gi ) : hex.match( /[a-f\d]{2}/gi );
-
         if (rgb.length === 3) rgb.push('ff');
-        if (rgb.length !== 4) throw('Color.hex2rgb : rgb로 변환할 수 없는 hex 문자입니다! -> ' + hex);
 
         rgb.forEach((str, idx, arr) => {
             if (str.length === 1) str = str + str;
@@ -62,8 +86,6 @@ class Color {
     }
 
     static rgb2hex(r, g, b, a = 1) {
-        a = Math.max(Math.min(a, 1), 0);
-
         let hex = '#';
         hex += Math.floor(r).toString(16).padStart(2, '0');
         hex += Math.floor(g).toString(16).padStart(2, '0');
@@ -107,7 +129,7 @@ class Color {
             h /= 6;
         }
 
-        return [h, s, v, Math.max(Math.min(a, 1), 0)];
+        return [h, s, v, a];
     }
 
     static hsv2rgb(h, s, v, a = 1) {
@@ -188,7 +210,7 @@ class Color {
             }
         }
 
-        return [Math.round(h * 60), parseFloat(s.toFixed(2)), parseFloat(l.toFixed(2)), Math.max(Math.min(a, 1), 0)];
+        return [Math.round(h * 60), parseFloat(s.toFixed(2)), parseFloat(l.toFixed(2)), a];
     }
 
     static hsl2rgb(h, s, l, a = 1) {
@@ -200,7 +222,7 @@ class Color {
             if (t * 6 < 1) return p + (q - p) * 6 * t;
             if (t * 2 < 1) return q;
             if (t * 3 < 2) return p + (q - p) * (2 / 3 - t) * 6;
-
+            
             return p;
         }
 
@@ -211,7 +233,7 @@ class Color {
         const g = hue2rgb(p, q, h);
         const b = hue2rgb(p, q, h - 1 / 3);
 
-        return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255), Math.max(Math.min(a, 1), 0)];
+        return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255), a];
     }
 }
 
@@ -240,13 +262,12 @@ class UIColorPickerPanel extends HTMLElement {
                 --height: 260px;
                 --padding: 12px;
 
-                --color-bg: hsl(200, 15%, 15%, 1.0);
-                --color-line: hsl(200, 20%, 25%, 1.0);
-                --color-text: hsl(0, 0%, 70%, 0.7);
-                --color-value: hsl(0, 0%, 100%, 0.8);
-                --color-focus: hsl(200, 80%, 40%, 1.0);
-                --color-btn: hsl(200, 60%, 40%, 1.0);
-                --color-input: hsl(200, 30%, 7%, 0.7);
+                --color-bg: hsl(200, 15%, 25%, 1.00);
+                --color-line: hsl(200, 20%, 35%, 1.00);
+                --color-text: hsl(0, 0%, 80%, 0.75);
+                --color-focus: hsl(200, 80%, 40%, 1.00);
+                --color-btn: hsl(200, 50%, 35%, 1.00);
+                --color-input: hsl(200, 30%, 7%, 0.75);
 
                 --shadow-bg: 0 4px 10px hsl(0, 0%, 0%, 0.20), 0 2px 6px hsl(0, 0%, 0%, 0.30);
                 --shadow-point: 0 2px 3px hsl(0, 0%, 0%, 0.3);
@@ -257,7 +278,7 @@ class UIColorPickerPanel extends HTMLElement {
                 transform: translate(-10px, -10px);
             }
         `;
-
+        
         // panel & common
         style.textContent += `
             #panel {
@@ -274,12 +295,6 @@ class UIColorPickerPanel extends HTMLElement {
 
             .hide {
                 display: none !important;
-            }
-
-            .center {
-                display: flex;
-                align-items: center;
-                justify-content: center;
             }
         `;
 
@@ -349,16 +364,6 @@ class UIColorPickerPanel extends HTMLElement {
                 );
             }
 
-            #alpha #dim,
-            .svg_wrap {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                overflow: hidden;
-            }
-
             .point {
                 position: absolute;
                 width: 10px;
@@ -370,14 +375,16 @@ class UIColorPickerPanel extends HTMLElement {
                 pointer-events: none;
                 z-index: 1;
             }
-            
+
+            #alpha #dim,
+            .svg_wrap,
             .color {
                 position: absolute;
-                top: -5px;
-                left: -5px;
-                width: calc(100% + 10px);
-                height: calc(100% + 10px);
-                background-color: hsl(0, 100%, 50%, 0.8);
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
             }
 
             svg {
@@ -390,21 +397,24 @@ class UIColorPickerPanel extends HTMLElement {
         style.textContent += `
             #values {
                 display: grid;
-                grid-template-columns: 45px auto;
-                gap: 4px 12px;
+                grid-template-columns: 50px auto;
+                grid-gap: 4px 12px;
                 width: calc(100% - var(--padding) * 2);
+                margin: 6px 0;
             }
 
             #value_color {
-                grid-row: span 2;
                 position: relative;
+                grid-row: span 2;
+                width: 50px;
+                height: 50px;
                 border-radius: 100px;
                 background-color: #000;
                 overflow: hidden;
             }
+
             #value_tab {
                 display: flex;
-                margin-bottom: 2px;
             }
 
             #value_tab input[type=radio] {
@@ -414,9 +424,12 @@ class UIColorPickerPanel extends HTMLElement {
             #value_tab input[type=radio]:not(:checked) + label {
                 cursor: pointer;
             }
-            
+
             #value_tab input[type=radio] + label {
                 flex: 1;
+                display: flex;
+                justify-content: center;
+
                 font-size: 10px;
                 line-height: 16px;
                 color: var(--color-text);
@@ -426,50 +439,55 @@ class UIColorPickerPanel extends HTMLElement {
             }
 
             #value_tab input[type=radio] + label:nth-of-type(1) {
-                border-radius: 4px 0 0 4px;
+                border-radius: 3px 0 0 3px;
                 border-left: 1px solid;
                 border-right: 1px solid;
                 border-color: var(--color-line);
             }
 
             #value_tab input[type=radio] + label:nth-last-of-type(1) {
-                border-radius: 0 4px 4px 0;
+                border-radius: 0 3px 3px 0;
                 border-left: 1px solid;
                 border-right: 1px solid;
                 border-color: var(--color-line);
             }
 
             #value_tab input[type=radio]:checked + label {
-                color: hsl(0, 0%, 100%, 0.8);
+                color: #fff;
                 border-color: var(--color-focus);
                 background-color: var(--color-focus);
             }
 
-            .value_wrap,
-            .tag_wrap {
+            #value_input .value {
                 display: flex;
                 gap: 4px;
             }
 
-            #value_input input[type=text] {
+            #value_input .value > div {
+                flex: 1;
+                font-size: 10px;
+                line-height: 8px;
+                text-align: center;
+                color: var(--color-text);
+                margin-bottom: 1px;
+            }
+
+            #value_input .value input[type=text] {
                 flex: 1;
                 width: 1px;
-                height: 21px;
+                height: 19px;
                 font-size: 11px;
                 text-align: center;
-                color: var(--color-value);
+                color: var(--color-text);
                 border: 1px solid var(--color-line);
                 background-color: var(--color-input);
                 outline: none;
             }
 
-            #value_tag .tag_wrap > div {
-                flex: 1;
-                font-size: 10px;
-                line-height: 6px;
-                text-align: center;
-                color: var(--color-text);
+            #value_input .value:first-child {
+                grid-template-columns: repeat(1, 1fr);
             }
+
         `;
         
         // btns
@@ -487,15 +505,17 @@ class UIColorPickerPanel extends HTMLElement {
 
             #btns button {
                 position: relative;
-                width: 28px;
-                height: 28px;
-                fill: hsl(0, 0%, 100%, 0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 26px;
+                height: 26px;
+                fill: hsl(0, 0%, 100%, 0.75);
                 border: 1px solid var(--color-line);
                 background-color: var(--color-btn);
                 cursor: pointer;
             }
             #btns button:hover {
-                fill: hsl(0, 0%, 100%, 1.0);
                 filter: brightness(1.3);
             }
 
@@ -523,84 +543,81 @@ class UIColorPickerPanel extends HTMLElement {
         `;
 
         const valuesHTML = `
-            <div id="values" class="">
-                <div id="value_color" class="">
+            <div id="values">
+                <div id="value_color">
                     <svg class="point_bg"></svg>
                     <div class="color"></div>
                 </div>
-                <div id="value_tab" class="">
+                <div id="value_tab">
                     <input type="radio" name="type" id="type_hex" checked />
-                    <label for="type_hex" class="center">HEX</label>
+                    <label for="type_hex">HEX</label>
                     <input type="radio" name="type" id="type_rgb" />
-                    <label for="type_rgb" class="center">RGB</label>
+                    <label for="type_rgb">RGB</label>
                     <input type="radio" name="type" id="type_hsl" />
-                    <label for="type_hsl" class="center">HSL</label>
+                    <label for="type_hsl">HSL</label>
                 </div>
-                <div id="value_input" class="">
-                    <div class="value_wrap" for="type_hex">
+                <div id="value_input">
+                    <div class="value" for="type_hex">
+                        <div>HEX</div>
+                    </div>
+                    <div class="value" for="type_hex">
                         <input type="text" id="value_hex" />
                     </div>
-                    <div class="value_wrap hide" for="type_rgb">
+
+                    <div class="value hide" for="type_rgb">
+                        <div>R</div>
+                        <div>G</div>
+                        <div>B</div>
+                        <div class="alpha">A</div>
+                    </div>
+                    <div class="value hide" for="type_rgb">
                         <input type="text" id="value_rgb_r" />
                         <input type="text" id="value_rgb_g" />
                         <input type="text" id="value_rgb_b" />
                         <input type="text" id="value_rgb_a" class="alpha" />
                     </div>
-                    <div class="value_wrap hide" for="type_hsl">
+                    <div class="value hide" for="type_hsl">
+                        <div>H</div>
+                        <div>S</div>
+                        <div>L</div>
+                        <div class="alpha">A</div>
+                    </div>
+                    <div class="value hide" for="type_hsl">
                         <input type="text" id="value_hsl_h" />
                         <input type="text" id="value_hsl_s" />
                         <input type="text" id="value_hsl_l" />
                         <input type="text" id="value_hsl_a" class="alpha" />
                     </div>
                 </div>
-                <div id="" class=""><!-- empty --></div>
-                <div id="value_tag" class="">
-                    <div class="tag_wrap" for="type_hex">
-                        <div>HEX</div>
-                    </div>
-                    <div class="tag_wrap hide" for="type_rgb">
-                        <div>R</div>
-                        <div>G</div>
-                        <div>B</div>
-                        <div class="alpha">A</div>
-                    </div>
-                    <div class="tag_wrap hide" for="type_hsl">
-                        <div>H</div>
-                        <div>S</div>
-                        <div>L</div>
-                        <div class="alpha">A</div>
-                    </div>
-                </div>
             </div>
         `;
 
         const btnsHtml = `
-            <div id="btns" class="">
+            <div id="btns">
                 <div class="btn_wrap">
-                    <button id="btn_reset" class="btn center" title="초기화">
+                    <button id="btn_reset" class="btn" title="초기화">
                         <svg viewBox="0 0 20 20">
-                            <path d="M15.9,4.9c-1.2-1.2-2.7-2-4.3-2.3l0.1-0.8c0-0.5-0.5-0.9-0.9-0.6L7.2,2.9C6.8,3.1,6.7,3.7,7.1,4l3.1,2.4
-                                c0.4,0.3,1,0.1,1-0.5l0.1-0.8c1,0.2,2,0.8,2.7,1.5c2.3,2.3,2.3,5.9,0,8.2c-1.1,1.1-2.6,1.7-4.1,1.7s-3-0.6-4.1-1.7
-                                c-2.3-2.3-2.3-5.9,0-8.2c0.5-0.5,0.5-1.3,0-1.8s-1.3-0.5-1.8,0c-3.2,3.2-3.2,8.5,0,11.7C5.7,18.2,7.8,19,10,19s4.3-0.9,5.9-2.4
-                                C19.1,13.4,19.1,8.1,15.9,4.9z"/>
+                            <path d="M15.7,5c-1.2-1.2-2.7-2-4.3-2.2L11.5,2c0-0.5-0.4-0.8-0.8-0.6L7.4,3C7,3.2,7,3.7,7.3,4l2.8,2.2c0.4,0.3,0.9,0,0.9-0.4
+                                l0.1-0.9c1.2,0.2,2.2,0.8,3.1,1.7c2.4,2.4,2.4,6.2,0,8.6c-1.1,1.1-2.7,1.8-4.3,1.8S6.9,16.1,5.7,15c-2.4-2.4-2.4-6.2,0-8.6
+                                c0.4-0.4,0.4-1,0-1.4s-1-0.4-1.4,0c-3.1,3.1-3.1,8.2,0,11.4c1.5,1.5,3.5,2.4,5.7,2.4s4.2-0.8,5.7-2.4C18.8,13.3,18.8,8.2,15.7,5z"/>
                         </svg>
                     </button>
                 </div>
                 <div class="btn_wrap">
-                    <button id="btn_copy" class="btn center" title="복사">
+                    <button id="btn_copy" class="btn" title="복사">
                         <svg viewBox="0 0 20 20">
                             <path d="M15,1.2H9C7.5,1.2,6.2,2.5,6.2,4v1H4C2.9,5,2,5.9,2,7v10c0,1.1,0.9,2,2,2h7c1.1,0,2-0.9,2-2v-2.2h2c1.5,0,2.8-1.2,2.8-2.8V4
                                 C17.8,2.5,16.5,1.2,15,1.2z M16.2,12c0,0.7-0.6,1.2-1.2,1.2h-2V7c0-1.1-0.9-2-2-2H7.8V4c0-0.7,0.6-1.2,1.2-1.2h6
                                 c0.7,0,1.2,0.6,1.2,1.2V12z"/>
                         </svg>
                     </button>
-                    <button id="btn_done" class="btn center" title="적용">
+                    <button id="btn_done" class="btn" title="적용">
                         <svg viewBox="0 0 20 20">
                             <path d="M8.5,17.6c-0.4,0-0.8-0.2-1.1-0.5l-5-5.5C1.8,11,1.8,10.1,2.4,9.5C3,9,4,9,4.6,9.6l3.7,4.1l7-10.6c0.5-0.7,1.4-0.9,2.1-0.4
                                 c0.7,0.5,0.9,1.4,0.4,2.1L9.7,16.9c-0.3,0.4-0.7,0.6-1.1,0.7C8.5,17.6,8.5,17.6,8.5,17.6z"/>
                         </svg>
                     </button>
-                    <button id="btn_close" class="btn center" title="취소">
+                    <button id="btn_close" class="btn" title="취소">
                         <svg viewBox="0 0 20 20">
                             <path d="M11.8,10l5.6-5.6c0.5-0.5,0.5-1.3,0-1.8s-1.3-0.5-1.8,0L10,8.2L4.4,2.7C4,2.2,3.2,2.2,2.7,2.7S2.2,4,2.7,4.4L8.2,10
                                 l-5.6,5.6c-0.5,0.5-0.5,1.3,0,1.8c0.2,0.2,0.6,0.4,0.9,0.4s0.6-0.1,0.9-0.4l5.6-5.6l5.6,5.6c0.2,0.2,0.6,0.4,0.9,0.4
@@ -638,11 +655,11 @@ class UIColorPickerPanel extends HTMLElement {
             `;
         });
 
-        this.#panel.querySelectorAll('input[name=type]').forEach(input => {
-            input.wraps = this.#panel.querySelectorAll(`.value_wrap, .tag_wrap`);
-            input.onclick = function() {
-                this.wraps.forEach(wrap => {
-                    wrap.classList.toggle('hide', wrap.getAttribute('for') !== this.id);
+        this.#panel.querySelectorAll('[name=type]').forEach(input => {
+            input.values = this.#panel.querySelectorAll(`.value`);
+            input.onchange = function() {
+                this.values.forEach(value => {
+                    value.classList.toggle('hide', value.getAttribute('for') !== this.id);
                 })
             }
         });
@@ -653,9 +670,14 @@ class UIColorPickerPanel extends HTMLElement {
         shadow.append(style, this.#panel);
     }
 
+    connectedCallback() {
+        
+    }
+
+    disconnectedCallback() {}
+
     init(colorString) {
-        const rgb = Color.parseRGB(colorString);
-        if (!!rgb) this.#color.rgb = rgb;
+        this.#color.init(colorString);
 
         this.#setPalettePosition();
         this.#setHuePosition();
@@ -671,8 +693,6 @@ class UIColorPickerPanel extends HTMLElement {
         const rangeY = parentRect.height;
         const correct = point.getBoundingClientRect().width / 2;
 
-        console.log(point, parentRect, rangeX, rangeY, correct)
-        
         if (typeof x === 'number') {
             x = Math.min(Math.max(x, 0), rangeX);
             this.#color.s = x / rangeX;
@@ -724,7 +744,7 @@ class UIColorPickerPanel extends HTMLElement {
 
     #setPaletteColor() {
         const h = this.#color.h * 360;
-        const { r, g, b } = this.#color.rgb;
+        const { r, g, b } = this.#color.rgbObj;
 
         this.#panel.querySelector('#palette').style.background = `
             linear-gradient(
@@ -771,15 +791,11 @@ class UIColorPickerPanel extends HTMLElement {
         });
     }
 
-    static get observedAttributes() {
-        return ['type', 'alpha', 'color'];
-    }
-
     attributeChangedCallback(attr, oldValue, newValue) {
         if (attr === 'type') {
             const type = newValue.toLowerCase();
             this.#type = ['hex', 'rgb', 'hsl'].includes(type) ? type : 'hex';
-            this.#panel.querySelector('#type_' + this.#type).click();
+            this.#panel.querySelector('#type_' + type).click();
         }
 
         if (attr === 'alpha') this.#setUseAlpha(this.hasAttribute('alpha'));
@@ -787,8 +803,19 @@ class UIColorPickerPanel extends HTMLElement {
         if (attr === 'color') this.init(newValue);
     }
 
-    static get ver() { return '2.0.0'; }
+    static get observedAttributes() {
+        return ['type', 'alpha', 'color'];
+    }
+
+    static get ON_CLICK_DONE() { return 'onClickDone'; }
+    static get ON_CLICK_CLOSE() { return 'onClickDone'; }
+    
+    static get ON_OPENED() { return 'onOpened'; }
+    static get ON_CLOSED() { return 'onClosed'; }
+
+    static get ver() { return '1.1.0'; }
     static get is() { return 'ui-color-picker-panel'; }
 }
 
 customElements.define(UIColorPickerPanel.is, UIColorPickerPanel);
+
